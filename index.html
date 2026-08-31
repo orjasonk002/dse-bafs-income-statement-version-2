@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DSE BAFS 損益表項目分類與編製大挑戰</title>
+  <style>
+    :root {
+      --primary: #0f172a;
+      --accent: #2563eb;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --success: #15803d;
+      --danger: #b91c1c;
+      --easy: #16a34a;
+      --medium: #d97706;
+      --hard: #dc2626;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg);
+      color: #334155;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+
+    .container {
+      background-color: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      width: 100%;
+      max-width: 750px;
+      padding: 32px;
+      box-sizing: border-box;
+    }
+
+    h1 {
+      color: var(--primary);
+      text-align: center;
+      font-size: 26px;
+      margin-top: 0;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #64748b;
+      font-size: 15px;
+      margin-bottom: 24px;
+    }
+
+    /* 案例選擇頁面 */
+    .case-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .case-btn {
+      background-color: #f1f5f9;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 16px;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .case-btn:hover {
+      border-color: var(--accent);
+      background-color: #eff6ff;
+      transform: translateY(-2px);
+    }
+
+    .case-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .case-name {
+      font-weight: bold;
+      font-size: 16px;
+      color: var(--primary);
+    }
+
+    .case-desc {
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    .badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+      color: white;
+      white-space: nowrap;
+    }
+
+    .badge.easy { background-color: var(--easy); }
+    .badge.medium { background-color: var(--medium); }
+    .badge.hard { background-color: var(--hard); }
+
+    /* 遊戲進行頁面 */
+    .game-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .btn-back {
+      background: none;
+      border: none;
+      color: var(--accent);
+      font-weight: bold;
+      cursor: pointer;
+      padding: 0;
+      font-size: 14px;
+    }
+
+    .progress-bar {
+      background-color: #e2e8f0;
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .progress-fill {
+      background-color: var(--accent);
+      height: 100%;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .question-card {
+      background-color: #f8fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .account-name {
+      font-size: 22px;
+      font-weight: bold;
+      color: var(--accent);
+      margin: 8px 0;
+    }
+
+    .options-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .btn-option {
+      background-color: white;
+      border: 2px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 14px 18px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #1e293b;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s ease;
+    }
+
+    .btn-option:hover {
+      border-color: var(--accent);
+      background-color: #eff6ff;
+    }
+
+    .feedback-box {
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 20px;
+      display: none;
+      line-height: 1.5;
+    }
+
+    .feedback-box.correct {
+      background-color: #dcfce7;
+      border: 1px solid #86efac;
+      color: #14532d;
+    }
+
+    .feedback-box.incorrect {
+      background-color: #fee2e2;
+      border: 1px solid #fca5a5;
+      color: #7f1d1d;
+    }
+
+    .praise-text {
+      font-weight: bold;
+      font-size: 17px;
+      margin-bottom: 6px;
+    }
+
+    .btn-next {
+      width: 100%;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      display: none;
+    }
+
+    /* 損益表展示 */
+    .financial-statement {
+      background-color: #ffffff;
+      border: 2px solid #0f172a;
+      border-radius: 8px;
+      padding: 24px;
+      margin: 20px 0;
+      text-align: left;
+      font-family: 'Courier New', Courier, monospace;
+    }
+
+    .statement-header {
+      text-align: center;
+      font-weight: bold;
+      font-family: inherit;
+      margin-bottom: 16px;
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 8px;
+    }
+
+    .statement-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      font-size: 14px;
+    }
+
+    .statement-row.sub {
+      padding-left: 20px;
+      color: #475569;
+    }
+
+    .statement-row.bold {
+      font-weight: bold;
+      border-top: 1px solid #cbd5e1;
+    }
+
+    .statement-row.final {
+      font-weight: bold;
+      border-top: 1px solid #0f172a;
+      border-bottom: 3px double #0f172a;
+      margin-top: 6px;
+    }
+
+    /* 地獄級計算題樣式 */
+    .calc-input-group {
+      margin: 15px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .calc-input {
+      padding: 10px;
+      font-size: 16px;
+      border: 2px solid #cbd5e1;
+      border-radius: 6px;
+      width: 200px;
+      text-align: center;
+    }
+
+    /* 結算頁面 */
+    .score-screen {
+      text-align: center;
+      display: none;
+    }
+
+    .score-number {
+      font-size: 44px;
+      font-weight: bold;
+      color: var(--accent);
+      margin: 12px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>DSE BAFS 損益表分類與編製大挑戰</h1>
+    <p class="subtitle">選取個案，幫助企業分類帳戶並生成標準香港 DSE 損益表！</p>
+
+    <!-- 1. 選擇個案頁面 -->
+    <div id="selection-screen">
+      <div class="case-menu" id="case-menu">
+        <!-- 由 JS 生成 5 個個案按鈕 -->
+      </div>
+    </div>
+
+    <!-- 2. 遊戲答題頁面 -->
+    <div id="game-screen" style="display: none;">
+      <div class="game-header">
+        <button class="btn-back" onclick="backToMenu()">← 返回個案選單</button>
+        <span id="case-title-display" style="font-weight: bold;"></span>
+      </div>
+
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+
+      <div class="question-card">
+        <div id="question-prompt">請分類以下帳戶（Account）：</div>
+        <div class="account-name" id="account-name">---</div>
+        <div style="font-size: 13px; color: #64748b;" id="question-count">題目 1 / 10</div>
+      </div>
+
+      <!-- 一般選擇題區域 -->
+      <div class="options-grid" id="options-container"></div>
+
+      <!-- 地獄級填空計算區域 -->
+      <div class="calc-input-group" id="calc-container" style="display: none;">
+        <input type="number" id="calc-input" class="calc-input" placeholder="請輸入金額 (HK$)">
+        <button class="btn-option" style="text-align: center; width: 200px;" onclick="checkCalcAnswer()">確認答案</button>
+      </div>
+
+      <div class="feedback-box" id="feedback-box">
+        <div class="praise-text" id="praise-text"></div>
+        <div id="explanation-text"></div>
+      </div>
+
+      <button class="btn-next" id="btn-next" onclick="nextQuestion()">下一題 →</button>
+    </div>
+
+    <!-- 3. 結算與損益表生成頁面 -->
+    <div class="score-screen" id="score-screen">
+      <h2>個案挑戰完成！</h2>
+      <p>你在這個個案中的成績為：</p>
+      <div class="score-number" id="final-score">0 / 10</div>
+      <p id="final-eval" style="font-size: 17px; font-weight: bold; margin-bottom: 20px;"></p>
+      
+      <h3>自動生成的香港 DSE 格式損益表：</h3>
+      <div class="financial-statement" id="financial-statement">
+        <!-- 由 JS 動態繪製損益表 -->
+      </div>
+
+      <button class="btn-next" style="display: inline-block; width: auto; padding: 12px 28px; margin-top: 15px;" onclick="backToMenu()">選擇其他個案</button>
+    </div>
+  </div>
+
+  <script>
+    // 香港潮語讚賞詞庫
+    const cantonesePraises = [
+      "你好叻呀！完全難唔倒你！",
+      "會唔會太犀利？張 Profit & Loss 平到完美！",
+      "巧極！答得咁快，有冇咁勁呀？",
+      "型到破表！Concept 清楚到爆！",
+      "過份咗少少喎，一眼就睇穿個帳戶性質！",
+      "無得頂！5** 狀元之材就係你！"
+    ];
+
+    const optionCategories = [
+      "1. 買賣貨品的收益 (Sales Revenue)",
+      "2. 買賣貨品的費用 / 銷貨成本項目 (Cost of Goods Sold Item)",
+      "3. 其他收益 (Other Revenue / Income)",
+      "4. 營運費用 / 其他費用 (Expenses)"
+    ];
+
+    // 5 個個案（各 10 題）
+    const cases = [
+      {
+        id: 1,
+        name: "個案一：葵涌茶餐廳",
+        level: "easy",
+        levelText: "簡單",
+        desc: "基礎買賣業項目（10題：銷貨、購貨、基本營運開支）",
+        company: "葵涌茶餐廳 (Kwai Chung Restaurant)",
+        data: { sales: 250000, openingInv: 30000, purchases: 90000, closingInv: 20000, otherIncome: 5000, expenses: 62000 },
+        questions: [
+          { account: "銷貨收入 (Sales Revenue) $250,000", correct: 0, exp: "銷貨代表主要業務獲得的收益。" },
+          { account: "期初存貨 (Opening Inventory) $30,000", correct: 1, exp: "期初存貨屬於計算銷貨成本的起點。" },
+          { account: "購貨 (Purchases) $90,000", correct: 1, exp: "購貨屬於計算銷貨成本的核心項目。" },
+          { account: "期末存貨 (Closing Inventory) $20,000", correct: 1, exp: "期末存貨需要在銷貨成本中扣除。" },
+          { account: "員工薪金 (Salaries) $40,000", correct: 3, exp: "薪金屬於營運開支 (Expenses)。" },
+          { account: "店舖租金 (Rent & Rates) $15,000", correct: 3, exp: "租金屬於營運開支 (Expenses)。" },
+          { account: "水電費 (Electricity) $5,000", correct: 3, exp: "水電費屬於日常營運開支。" },
+          { account: "清潔雜費 (Sundry Expenses) $2,000", correct: 3, exp: "雜費屬於營運開支。" },
+          { account: "銀行存款利息收入 (Interest Income) $5,000", correct: 2, exp: "利息不屬於主要業務，為其他收益。" },
+          { account: "外賣平台手續費 (Commission Expenses) $2,000", correct: 3, exp: "平台手續費屬於銷售營運開支。" }
+        ]
+      },
+      {
+        id: 2,
+        name: "個案二：旺角潮牌鞋店",
+        level: "easy",
+        levelText: "簡單",
+        desc: "包含退貨與運費項目（10題）",
+        company: "旺角潮牌鞋店 (Mong Kok Shoes Limited)",
+        data: { sales: 400000, returnIn: 10000, openingInv: 50000, purchases: 180000, carriageIn: 5000, closingInv: 35000, otherIncome: 8000, expenses: 92000 },
+        questions: [
+          { account: "銷貨 (Sales) $400,000", correct: 0, exp: "主要銷售收益。" },
+          { account: "銷貨退回 (Returns Inwards) $10,000", correct: 0, exp: "銷貨退回需由銷貨總額中扣除。" },
+          { account: "期初存貨 (Opening Inventory) $50,000", correct: 1, exp: "銷貨成本項目。" },
+          { account: "購貨 (Purchases) $180,000", correct: 1, exp: "銷貨成本項目。" },
+          { account: "購入貨物運費 (Carriage Inwards) $5,000", correct: 1, exp: "購入運費必須加進購貨成本中。" },
+          { account: "期末存貨 (Closing Inventory) $35,000", correct: 1, exp: "銷貨成本扣減項目。" },
+          { account: "銷貨運費 (Carriage Outwards) $12,000", correct: 3, exp: "銷貨運費屬於銷售費用 (Expenses)！" },
+          { account: "店舖保險 (Insurance) $8,000", correct: 3, exp: "營運開支。" },
+          { account: "廣告費 (Advertising) $72,000", correct: 3, exp: "市場推廣營運開支。" },
+          { account: "代售鞋款佣金收入 (Commission Income) $8,000", correct: 2, exp: "非主營業務之其他收益。" }
+        ]
+      },
+      {
+        id: 3,
+        name: "個案三：觀塘服裝批發商",
+        level: "medium",
+        levelText: "中等",
+        desc: "包含折讓與折扣（10題：Returns Outwards, Discounts 等）",
+        company: "觀塘服裝批發 (Kwun Tong Garment Wholesale)",
+        data: { sales: 600000, openingInv: 80000, purchases: 300000, returnOut: 15000, closingInv: 65000, discountRec: 6000, discountAllow: 9000, expenses: 110000 },
+        questions: [
+          { account: "銷貨 (Sales) $600,000", correct: 0, exp: "主要銷售收益。" },
+          { account: "期初存貨 (Opening Inventory) $80,000", correct: 1, exp: "銷貨成本項目。" },
+          { account: "購貨 (Purchases) $300,000", correct: 1, exp: "銷貨成本項目。" },
+          { account: "購貨退回 (Returns Outwards) $15,000", correct: 1, exp: "購貨退回需由購貨額中扣除。" },
+          { account: "期末存貨 (Closing Inventory) $65,000", correct: 1, exp: "銷貨成本扣減項目。" },
+          { account: "獲得折扣 (Discounts Received) $6,000", correct: 2, exp: "供應商給予的現金折扣屬於其他收益。" },
+          { account: "給予折扣 (Discounts Allowed) $9,000", correct: 3, exp: "給予客戶的折扣屬於財務/營運費用。" },
+          { account: "包裝費 (Packaging Expenses) $15,000", correct: 3, exp: "營運費用。" },
+          { account: "寫字樓薪金 (Salaries) $80,000", correct: 3, exp: "行政營運費用。" },
+          { account: "差餉及地租 (Rates) $6,000", correct: 3, exp: "營運費用。" }
+        ]
+      },
+      {
+        id: 4,
+        name: "個案四：銅鑼灣連鎖文具店",
+        level: "medium",
+        levelText: "中等",
+        desc: "包含折舊與壞帳（10題：Depreciation, Bad Debts 等）",
+        company: "銅鑼灣文具 (Causeway Bay Stationery Co.)",
+        data: { sales: 520000, openingInv: 60000, purchases: 220000, closingInv: 45000, rentIncome: 24000, expenses: 135000 },
+        questions: [
+          { account: "銷貨收入 (Sales Revenue) $520,000", correct: 0, exp: "銷售收益。" },
+          { account: "期初存貨 (Opening Inventory) $60,000", correct: 1, exp: "銷貨成本項目。" },
+          { account: "購貨 (Purchases) $220,000", correct: 1, exp: "銷貨成本項目。" },
+          { account: "期末存貨 (Closing Inventory) $45,000", correct: 1, exp: "銷貨成本扣減項目。" },
+          { account: "出租分店租金收入 (Rent Income) $24,000", correct: 2, exp: "非主業租金收入屬於其他收益。" },
+          { account: "設備折舊 (Depreciation: Equipment) $20,000", correct: 3, exp: "固定資產損耗屬於營運費用。" },
+          { account: "壞帳 (Bad Debts) $5,000", correct: 3, exp: "無法收回的欠款屬於營運費用。" },
+          { account: "店舖電費 (Electricity) $18,000", correct: 3, exp: "營運費用。" },
+          { account: "員工薪金 (Salaries) $80,000", correct: 3, exp: "營運費用。" },
+          { account: "文具損耗及雜費 (General Expenses) $12,000", correct: 3, exp: "營運費用。" }
+        ]
+      },
+      {
+        id: 5,
+        name: "個案五：中環高級電器店",
+        level: "hard",
+        levelText: "地獄級",
+        desc: "考驗學生自行計算：銷貨成本及總費用金額（10題）",
+        company: "中環高級電器 (Central Electronics Ltd.)",
+        data: { sales: 900000, openingInv: 120000, purchases: 450000, carriageIn: 10000, returnOut: 20000, closingInv: 100000, otherIncome: 15000, expenses: 165000 },
+        questions: [
+          { type: "cat", account: "銷貨 (Sales) $900,000", correct: 0, exp: "銷售收益。" },
+          { type: "cat", account: "期初存貨 (Opening Inventory) $120,000", correct: 1, exp: "銷貨成本項目。" },
+          { type: "cat", account: "購貨 (Purchases) $450,000", correct: 1, exp: "銷貨成本項目。" },
+          { type: "cat", account: "購入運費 (Carriage Inwards) $10,000", correct: 1, exp: "加進購貨成本。" },
+          { type: "cat", account: "購貨退回 (Returns Outwards) $20,000", correct: 1, exp: "由購貨中扣除。" },
+          { type: "cat", account: "期末存貨 (Closing Inventory) $100,000", correct: 1, exp: "銷貨成本扣減項目。" },
+          { type: "cat", account: "銀行存款利息收入 (Interest Income) $15,000", correct: 2, exp: "其他收益。" },
+          { type: "cat", account: "高級展會租金及薪金等總費用 $165,000", correct: 3, exp: "營運費用。" },
+          { 
+            type: "calc", 
+            prompt: "地獄計算題 (1)：根據上述數據，請計算「銷貨成本 (Cost of Goods Sold)」總額為多少？", 
+            correctVal: 460000, 
+            exp: "計算方法：期初存貨 $120,000 + 購貨 $450,000 + 購入運費 $10,000 - 購貨退回 $20,000 - 期末存貨 $100,000 = $460,000" 
+          },
+          { 
+            type: "calc", 
+            prompt: "地獄計算題 (2)：已知銷貨 $900,000、其他收益 $15,000、銷貨成本 $460,000 及費用 $165,000，請計算「純利 (Net Profit)」為多少？", 
+            correctVal: 290000, 
+            exp: "計算方法：毛利 ($900,000 - $460,000 = $440,000) + 其他收益 $15,000 - 費用 $165,000 = $290,000" 
+          }
+        ]
+      }
+    ];
+
+    let currentCase = null;
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let answered = false;
+
+    // 初始化案例選單
+    function initMenu() {
+      const menuContainer = document.getElementById('case-menu');
+      menuContainer.innerHTML = '';
+
+      cases.forEach(c => {
+        const btn = document.createElement('div');
+        btn.className = 'case-btn';
+        btn.onclick = () => startCase(c.id);
+        btn.innerHTML = `
+          <div class="case-info">
+            <div class="case-name">${c.name}</div>
+            <div class="case-desc">${c.desc}</div>
+          </div>
+          <span class="badge ${c.level}">${c.levelText}</span>
+        `;
+        menuContainer.appendChild(btn);
+      });
+    }
+
+    function startCase(caseId) {
+      currentCase = cases.find(c => c.id === caseId);
+      currentQuestionIndex = 0;
+      score = 0;
+
+      document.getElementById('selection-screen').style.display = 'none';
+      document.getElementById('score-screen').style.display = 'none';
+      document.getElementById('game-screen').style.display = 'block';
+      document.getElementById('case-title-display').innerText = currentCase.name;
+
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      answered = false;
+      const q = currentCase.questions[currentQuestionIndex];
+
+      document.getElementById('progress-fill').style.width = `${((currentQuestionIndex) / currentCase.questions.length) * 100}%`;
+      document.getElementById('question-count').innerText = `題目 ${currentQuestionIndex + 1} / ${currentCase.questions.length}`;
+
+      document.getElementById('feedback-box').style.display = 'none';
+      document.getElementById('btn-next').style.display = 'none';
+
+      const optionsContainer = document.getElementById('options-container');
+      const calcContainer = document.getElementById('calc-container');
+
+      if (q.type === "calc") {
+        document.getElementById('question-prompt').innerText = "請計算並填寫正確金額：";
+        document.getElementById('account-name').innerText = q.prompt;
+        optionsContainer.style.display = 'none';
+        calcContainer.style.display = 'flex';
+        document.getElementById('calc-input').value = '';
+      } else {
+        document.getElementById('question-prompt').innerText = "請分類以下帳戶（Account）：";
+        document.getElementById('account-name').innerText = q.account;
+        calcContainer.style.display = 'none';
+        optionsContainer.style.display = 'flex';
+        optionsContainer.innerHTML = '';
+
+        optionCategories.forEach((catText, idx) => {
+          const btn = document.createElement('button');
+          btn.className = 'btn-option';
+          btn.innerText = catText;
+          btn.onclick = () => checkCatAnswer(idx);
+          optionsContainer.appendChild(btn);
+        });
+      }
+    }
+
+    function checkCatAnswer(selectedIndex) {
+      if (answered) return;
+      answered = true;
+
+      const q = currentCase.questions[currentQuestionIndex];
+      const optionButtons = document.querySelectorAll('#options-container .btn-option');
+
+      optionButtons.forEach((btn, idx) => {
+        btn.disabled = true;
+        btn.style.cursor = 'default';
+        if (idx === q.correct) {
+          btn.style.borderColor = 'var(--success)';
+          btn.style.backgroundColor = '#dcfce7';
+        } else if (idx === selectedIndex) {
+          btn.style.borderColor = 'var(--danger)';
+          btn.style.backgroundColor = '#fee2e2';
+        }
+      });
+
+      showFeedback(selectedIndex === q.correct, q.exp);
+    }
+
+    function checkCalcAnswer() {
+      if (answered) return;
+      
+      const q = currentCase.questions[currentQuestionIndex];
+      const val = parseInt(document.getElementById('calc-input').value, 10);
+      
+      if (isNaN(val)) {
+        alert("請輸入有效的數字金額！");
+        return;
+      }
+
+      answered = true;
+      showFeedback(val === q.correctVal, q.exp);
+    }
+
+    function showFeedback(isCorrect, explanation) {
+      const feedbackBox = document.getElementById('feedback-box');
+      const praiseText = document.getElementById('praise-text');
+      const explanationText = document.getElementById('explanation-text');
+
+      feedbackBox.style.display = 'block';
+
+      if (isCorrect) {
+        score++;
+        feedbackBox.className = 'feedback-box correct';
+        const randomPraise = cantonesePraises[Math.floor(Math.random() * cantonesePraises.length)];
+        praiseText.innerText = `🎉 ${randomPraise}`;
+      } else {
+        feedbackBox.className = 'feedback-box incorrect';
+        praiseText.innerText = "❌ 答錯了！要再仔細算算/想想看！";
+      }
+
+      explanationText.innerHTML = `<strong>DSE 會計概念解析：</strong>${explanation}`;
+      document.getElementById('btn-next').style.display = 'block';
+    }
+
+    function nextQuestion() {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < currentCase.questions.length) {
+        loadQuestion();
+      } else {
+        showFinalScore();
+      }
+    }
+
+    function showFinalScore() {
+      document.getElementById('game-screen').style.display = 'none';
+      const scoreScreen = document.getElementById('score-screen');
+      scoreScreen.style.display = 'block';
+
+      document.getElementById('final-score').innerText = `${score} / ${currentCase.questions.length}`;
+
+      const finalEval = document.getElementById('final-eval');
+      if (score === 10) {
+        finalEval.innerText = "🏆 屈機！全對完成！損益表結構同計算完全難唔倒你！";
+        finalEval.style.color = "var(--success)";
+      } else if (score >= 7) {
+        finalEval.innerText = "👍 表現好勁！概念好清晰，注意計算細節就得！";
+        finalEval.style.color = "var(--accent)";
+      } else {
+        finalEval.innerText = "💪 差少少！溫多溫 COGS 計算同項目分類再嚟過！";
+        finalEval.style.color = "var(--danger)";
+      }
+
+      generateStatementHTML();
+    }
+
+    function generateStatementHTML() {
+      const d = currentCase.data;
+      const netSales = d.sales - (d.returnIn || 0);
+      const cogs = (d.openingInv + d.purchases + (d.carriageIn || 0) - (d.returnOut || 0)) - d.closingInv;
+      const grossProfit = netSales - cogs;
+      const netProfit = grossProfit + (d.otherIncome || d.rentIncome || d.discountRec || 0) - d.expenses;
+
+      let html = `
+        <div class="statement-header">
+          ${currentCase.company}<br>
+          損益表 (Income Statement)<br>
+          <span style="font-size: 12px; font-weight: normal;">截至 2026 年 12 月 31 日止年度 (單位：HK$)</span>
+        </div>
+        <div class="statement-row"><span>銷貨 (Sales)</span><span>$${d.sales.toLocaleString()}</span></div>
+      `;
+
+      if (d.returnIn) {
+        html += `<div class="statement-row sub"><span>減：銷貨退回 (Less: Returns Inwards)</span><span>($${d.returnIn.toLocaleString()})</span></div>`;
+        html += `<div class="statement-row bold"><span>營業額 (Net Sales)</span><span>$${netSales.toLocaleString()}</span></div>`;
+      }
+
+      html += `<div class="statement-row" style="margin-top:8px;"><span>減：銷貨成本 (Less: Cost of Goods Sold)</span><span></span></div>`;
+      html += `<div class="statement-row sub"><span>期初存貨 (Opening Inventory)</span><span>$${d.openingInv.toLocaleString()}</span></div>`;
+      html += `<div class="statement-row sub"><span>加：購貨 (Purchases)</span><span>$${d.purchases.toLocaleString()}</span></div>`;
+      if (d.carriageIn) html += `<div class="statement-row sub"><span>加：購入運費 (Carriage Inwards)</span><span>$${d.carriageIn.toLocaleString()}</span></div>`;
+      if (d.returnOut) html += `<div class="statement-row sub"><span>減：購貨退回 (Less: Returns Outwards)</span><span>($${d.returnOut.toLocaleString()})</span></div>`;
+      html += `<div class="statement-row sub"><span>減：期末存貨 (Less: Closing Inventory)</span><span>($${d.closingInv.toLocaleString()})</span></div>`;
+      html += `<div class="statement-row bold"><span>銷貨成本總額 (Cost of Goods Sold)</span><span>($${cogs.toLocaleString()})</span></div>`;
+
+      html += `<div class="statement-row bold" style="margin-top:8px;"><span>毛利 (Gross Profit)</span><span>$${grossProfit.toLocaleString()}</span></div>`;
+
+      if (d.otherIncome || d.rentIncome || d.discountRec) {
+        const otherVal = d.otherIncome || d.rentIncome || d.discountRec;
+        html += `<div class="statement-row sub"><span>加：其他收益 (Add: Other Income)</span><span>$${otherVal.toLocaleString()}</span></div>`;
+      }
+
+      html += `<div class="statement-row sub"><span>減：營運費用總額 (Less: Expenses)</span><span>($${d.expenses.toLocaleString()})</span></div>`;
+      html += `<div class="statement-row final"><span>純利 (Net Profit)</span><span>$${netProfit.toLocaleString()}</span></div>`;
+
+      document.getElementById('financial-statement').innerHTML = html;
+    }
+
+    function backToMenu() {
+      document.getElementById('game-screen').style.display = 'none';
+      document.getElementById('score-screen').style.display = 'none';
+      document.getElementById('selection-screen').style.display = 'block';
+    }
+
+    // 初始化
+    initMenu();
+  </script>
+</body>
+</html>
